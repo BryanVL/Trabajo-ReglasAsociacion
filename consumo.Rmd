@@ -1,0 +1,40 @@
+---
+title: "Proyecto de reglas de asociación - Consumo"
+author: "Bryan Velicka Leka y Franco Manuel García Dos Santos"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## ------------------------ Introducción ------------------------ ##
+
+En este documento preprocesaremos, analizaremos y visualizaremos datos y reglas sobre el dataset consumo
+
+
+```{r message=FALSE, warning=FALSE}
+library(readr)
+library(tidyverse)
+library(dplyr)
+library(arules)
+library(arulesViz)
+```
+
+
+## 1. Descargar a local el dataset consumo.csv (en CV).
+
+## 2. Analizar la estructura, tipo,… del dataset.
+```{r}
+
+```
+
+
+
+
+
+
