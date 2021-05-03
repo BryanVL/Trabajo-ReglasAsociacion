@@ -30,7 +30,7 @@ library(arulesViz)
 
 ## 2. Analizar la estructura, tipo,… del dataset.
 ```{r}
-
+hola
 ```
 
 
