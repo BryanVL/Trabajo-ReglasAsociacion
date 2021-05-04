@@ -14,26 +14,221 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## ------------------------ Introducción ------------------------ ##
 
-En este documento preprocesaremos, analizaremos y visualizaremos datos y reglas sobre el dataset consumo
+En este documento preprocesaremos, analizaremos y visualizaremos datos y reglas sobre el dataset consumo.csv
 
-
+## 0. Carga de paquetes necesarios
 ```{r message=FALSE, warning=FALSE}
 library(readr)
 library(tidyverse)
 library(dplyr)
 library(arules)
 library(arulesViz)
+library(ggplot2)
+library(ggthemes)
+
 ```
 
 
 ## 1. Descargar a local el dataset consumo.csv (en CV).
-
-## 2. Analizar la estructura, tipo,… del dataset.
 ```{r}
-hola
+consumo_ds <- read_csv("consumo.csv")
+#View(consumo_ds)
+
 ```
 
 
+## 2. Analizar la estructura, tipo, etc., del dataset.
+```{r}
+#El conjunto de datos de nuestro dataset consumo.csv contiene informacion de productos comprados en una gran cafetería.
+#Observamos 21293 compras en 4 variables/columnas de datos.
+dim(consumo_ds)
+
+str(consumo_ds)
+
+```
+
+
+## 3. Analizar signicado, estructura, tipo, etc., de cada columna.
+```{r}
+sapply(consumo_ds, class)
+
+# - Describo a continuación el significado, la estructura y el tipo de cada columna:
+
+#La columna 'Date' hace referencia a la fecha en la que se ha realizado la venta de un producto comprado por un cliente (formato YYYY-MM-DD).
+#La estructura de esta columna es la de un vector de tipo 'Date o Fecha' cuya longitud es la misma que el nº de filas del dataset.
+str(consumo_ds$Date)
+
+#La columna 'Time' hace referencia a la hora en la que se ha realizado la venta del producto (formato hh:mm:ss).
+#La estructura de esta columna es la de un vector de tipo 'hms', clase utilizada para almacenar valores de hora del día a partir de un vector numerico indicando hora, minutos y segundos. Su longitud es la misma que el nº de filas del dataset.
+str(consumo_ds$Time)
+
+#La columna 'Transaction' hace referencia al identificador del comprador del producto.
+#La estructura de esta columna es la de un vector de tipo 'numeric' cuya longitud es la misma que el nº de filas del dataset.
+str(consumo_ds$Transaction)
+
+#La columna 'Item' hace referencia al nombre del producto.
+#La estructura de esta columna es la de un vector de tipo 'character' cuya longitud es la misma que el nº de filas del dataset.
+str(consumo_ds$Item)
+
+```
+
+
+## 4. Comandos para ver las primeras filas y las últimas.
+```{r}
+#Con la funcion head(x, ...) devolvemos las primeras filas del dataset que especifiquemos
+head(consumo_ds,5)
+
+#Con la funcion tail(x, ...) devolvemos las ultimas filas del dataset que especifiquemos
+tail(consumo_ds,5)
+
+```
+
+
+## 5. Cambiar los nombres de las columnas: Fecha, Hora, IDcomprador, ProductoComprado.
+```{r}
+#Con la función names(x) podemos cambiar los nombres de las cols del dataset que deseemos
+names(consumo_ds) <- c("Fecha","Hora","IDComprador","ProductoComprado")
+
+```
+
+
+## 6. Hacer un resumen (summary) del dataset y analizar toda la información detalladamente que devuelve el comando.
+```{r}
+summary(consumo_ds)
+
+```
+
+
+## 7. Implementar una función que usando funciones vectoriales de R (apply, tapply, sapply,…) te devuelva si hay valores NA (mirar valores desconocidos como vienen en el dataset) en las columnas del dataset, si así lo fuera elminarlos del dataset pero guardarlos en un dataset_auxiliar.
+```{r}
+
+na.in.dataframe <-function(dataframe){
+ ....
+ 
+return(list(hay.nas,dataframe.sin.nas,posiciones)) 
+}
+
+unique(consumo_ds$Hora)
+
+consumo_ds %>% filter( ProductoComprado == "NONE"  )
+
+#ITEM NONE
+
+```
+
+
+## 8. Calcular número de filas del dataset.
+```{r}
+#La funcion dim(x) nos devuelve el nº de filas y columnas que tiene el dataset
+#El primer elemento nos indica el nº de filas
+dim(consumo_ds)[1]
+
+#La funcion nrow(x) nos devuelve directamente el número de filas que tiene el dataset
+nrow(consumo_ds)
+
+```
+
+
+## 9. Calcula en cuántas fechas distintas se han realizado ventas.
+```{r}
+#La funcion unique(x) nos devuelve en nuestro caso un vector con las fechas sin duplicar
+#Con length(x) obtenemos la longitud de la lista = nº fechas distintas
+length(unique(consumo_ds$Fecha))
+
+#La funcion n_distinct nos devuelve directamente el nº de fechas distintas
+n_distinct(consumo_ds$Fecha)
+
+```
+
+
+## 10. Calcula cuántos compradores distintos hay en el dataset.
+```{r}
+#Aplicamos el mismo razonamiento que en el paso 9
+length(unique(consumo_ds$IDComprador))
+
+n_distinct(consumo_ds$IDComprador)
+
+```
+
+
+## 11. Calcula cuántos productos distintos se han vendido.¿Cuales son los 10 más vendidos? Visualiza con algún gráfico.
+```{r}
+#Calculamos el nº de productos distintos que se han vendido
+n_distinct(consumo_ds$ProductoComprado)
+
+#Agrupamos el dataset por producto, calculamos el nº de ventas de cada uno de los productos, ordenamos descendentemente por el nº de ventas y cogemos las 10 primeras filas
+prod_mas_vendidos <- consumo_ds %>% 
+                     group_by(ProductoComprado) %>%
+                     summarise("Num_ventas" = n()) %>%
+                     arrange(desc(Num_ventas)) %>%
+                     slice(1:10)
+               
+#Visualizamos mediante un gráfico de barras los 10 productos mas vendidos
+g1 <- ggplot(prod_mas_vendidos, aes(x=ProductoComprado, y=Num_ventas)) +
+      geom_bar(stat="identity", fill="#8DFF8D", colour="black") + 
+      theme(axis.text.x = element_text(angle = 45, vjust = 0.5), 
+      axis.title = element_text(size = 12, face = "bold") ) + 
+      ggtitle("Los 10 productos más vendidos") +
+      labs(x = "Productos", y="Ventas") +
+      geom_text( aes(label=Num_ventas), vjust=-0.3, colour="black", size = 3.5)
+
+g1
+
+```
+
+
+## 12. Calcula las ventas por franjas y visualiza.
+```{r}
+#Cambiamos la columna 'Hora' de manera que extraemos solamente la hora. Agrupamos por hora y calculamos el nº de ventas de cada uno de los productos por cada hora.
+ventas_franja <- consumo_ds %>% 
+          mutate( Hora = factor( format( strptime(Hora, "%H:%M:%S"), '%H') )) %>%
+          group_by(Hora) %>%
+          summarise("Num_ventas" = n())
+
+#Visualizamos mediante otro gráfico de barras las ventas por franjas horarias.
+g2 <- ggplot(ventas_franja, aes(x=Hora, y=Num_ventas)) +
+      geom_bar(stat="identity", fill="lightblue", colour="black") +
+      theme_classic() + 
+      ggtitle("Ventas por franjas horarias") +
+      labs(x = "Franjas horarias", y="Ventas") +
+      theme(axis.text.x = element_text(angle = 0, vjust = 0.5), 
+      axis.title = element_text(size = 10, face = "bold") ) +
+      geom_text(aes(label=Num_ventas), vjust=-0.4, colour="black", size = 3.5)
+
+g2
+
+```
+
+
+## 13. Separa la fecha en año, mes y día. Obten qué años, meses y días hay más ventas con el objetivo de tener más personal en esas fechas. Visualiza las ventas acumuladas por meses.
+```{r}
+
+```
+
+
+
+## 14. Usa split para construir a partir de dataset una lista con nombre 'lista.compra.usuarios' en la que cada elemento de la lista es cada comprador junto con todos los productos que ha comprado.
+```{r}
+
+```
+
+
+## 15. Hacer summary de 'lista.compra.usuarios'.
+```{r}
+
+```
+
+
+## 16. Contar cuántos usuarios hay en la lista 'lista.compra.usuarios'.
+```{r}
+
+```
+
+
+## 17. Convertir a tipo de datos transacciones. Guardar en 'Tlista.compra.usuarios'.
+```{r}
+
+```
 
 
 
