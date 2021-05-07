@@ -12,9 +12,12 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## ------------------------ Introducción ------------------------ ##
+# ---------------------- Introducción ---------------------- #
 
 En este documento preprocesaremos, analizaremos y visualizaremos datos y reglas sobre el dataset consumo.csv
+
+
+# ------------------ Manipulación dataset ------------------ #
 
 ## 0. Carga de paquetes necesarios
 ```{r message=FALSE, warning=FALSE}
@@ -179,85 +182,85 @@ g1
 
 ## 12. Calcula las ventas por franjas y visualiza.
 ```{r}
-#Cambiamos la columna 'Hora' de manera que extraemos solamente la hora. Agrupamos por hora y calculamos el nº de ventas de cada uno de los productos por cada hora.
+#Utilizamoss la columna 'Hora' de manera que extraemos solamente la hora y la guardamos en otra columna 'Franja'. Agrupamos por 'Franja' y calculamos el nº de ventas de cada uno de los productos por cada hora.
 ventas_franja <- consumo_ds %>% 
-          mutate( Hora = factor( format( strptime(Hora, "%H:%M:%S"), '%H') )) %>%
-          group_by(Hora) %>%
+          mutate( Franja = factor( format( strptime(Hora, "%H:%M:%S"), '%H') )) %>%
+          group_by(Franja) %>%
           summarise("Num_ventas" = n())
 
 #Visualizamos mediante otro gráfico de barras las ventas por franjas horarias.
-g2 <- ggplot(ventas_franja, aes(x=Hora, y=Num_ventas)) +
+g2 <- ggplot(ventas_franja, aes(x=Franja, y=Num_ventas)) +
       geom_bar(stat="identity", fill="lightblue", colour="black") +
       theme_classic() + 
       ggtitle("Ventas por franjas horarias") +
       labs(x = "Franjas horarias", y="Ventas") +
       theme(axis.text.x = element_text(angle = 0, vjust = 0.5), 
-      axis.title = element_text(size = 10, face = "bold") ) +
+      axis.title = element_text(size = 12, face = "bold") ) +
       geom_text(aes(label=Num_ventas), vjust=-0.4, colour="black", size = 3.5)
 
 g2
-
-library(lubridate)
-consumo_ds %>% 
-  ggplot(aes(hour(hms(Hora)))) + 
-  geom_histogram(stat = "count",fill = "#E69F00", colour = "red") +
-  labs(x = "Hour of Day", y = "") +
-  theme_grey(base_size = 12)
 
 ```
 
 
 ## 13. Separa la fecha en año, mes y día. Obten qué años, meses y días hay más ventas con el objetivo de tener más personal en esas fechas. Visualiza las ventas acumuladas por meses.
 ```{r}
-consumo_ds2 <- consumo_ds
+#Creamos una funcion "separarFecha" que dado un dataset con una columna llamada 'Fecha' de tipo Date, separa el año, dia y mes de todas las filas y pone dichos valores en nuevas columnas.
+separarFecha <- function(dataset){
+  dataset %>% mutate( año = format( dataset$Fecha, format="%Y"),
+                      mes = format( dataset$Fecha, format="%m"),
+                      dia = format( dataset$Fecha, format="%d") )
+} 
+#Llamo a la función "separarFecha"
+consumo_ds2 <- separarFecha(consumo_ds)
 
-getAño <- function(x){
-  format( x, format="%Y")
-}
-
-getMes <- function(x){
-  format( x, format="%m")
-}
-
-getDia <- function(x){
-  format( x, format="%d")
-}
-
-consumo_ds2$año <- sapply(consumo_ds2$Fecha, getAño)
-consumo_ds2$mes <- sapply(consumo_ds2$Fecha, getMes)
-consumo_ds2$dia <- sapply(consumo_ds2$Fecha, getDia)
-
-
-ventas_mes <- consumo_ds2 %>%
-    group_by(año, mes) %>%
+#Agrupo por año y calculo el numero de ventas acumuladas por años.
+ventas_año <- consumo_ds2 %>%
+    group_by(año) %>%
     arrange(año) %>%
     summarise("Num_ventas" = n())
 
-g3 <- ggplot(ventas_mes, aes(x=interaction(mes,año), y=Num_ventas)) +
+ventas_año
+
+#Agrupo por dia y calculo el numero de ventas acumuladas por dias.
+ventas_dia <- consumo_ds2 %>%
+    group_by(dia) %>%
+    arrange(dia) %>%
+    summarise("Num_ventas" = n())
+
+ventas_dia
+
+#Agrupo por mes y calculo el numero de ventas acumuladas por meses.
+ventas_mes <- consumo_ds2 %>%
+    group_by(mes) %>%
+    arrange(mes) %>%
+    summarise("Num_ventas" = n())
+
+#Visualizo estas ventas acumuladas por meses.
+g3 <- ggplot(ventas_mes, aes(x=interaction(mes), y=Num_ventas)) +
       geom_bar(stat="identity", fill="lightblue", colour="black") +
       geom_text(aes(label=Num_ventas), vjust=-0.3, colour="black", size = 3.5) +
       theme_classic() + 
       ggtitle("Numero de ventas por mes") +
-      labs(x = "Mes/Año", y="Ventas") +
+      labs(x = "Mes", y="Ventas") +
       theme(axis.text.x = element_text(angle = 0, vjust = 0.5), 
       axis.title = element_text(size = 10, face = "bold") )
 
 g3
-  
-
 
 ```
 
 
 ## 14. Usa split para construir a partir de dataset una lista con nombre 'lista.compra.usuarios' en la que cada elemento de la lista es cada comprador junto con todos los productos que ha comprado.
 ```{r}
-prueba <- consumo_ds %>%
-          group_by(IDComprador) %>%
-          select(c(3,4))
+#Utilizando la funcion "split", le pasamos como primer argumento los datos que queremos dividir (en nuestro caso los productos) en grupos definido por el segundo argumento (los id de los compradores). El resultado es una lista donde cada elemento es un comprador asociado con los productos que ha comprado.
+lista.compra.usuarios <- split(consumo_ds$ProductoComprado, consumo_ds$IDComprador)
 
-lista.compra.usuarios <- split(prueba$ProductoComprado, prueba$IDComprador)
+#Observamos que el objeto devuelto por el split es de tipo lista
 class(lista.compra.usuarios)
-lista.compra.usuarios[1:10]
+
+#Mostramos los 5 primeros como ejemplo
+lista.compra.usuarios[1:5]
 
 ```
 
@@ -271,13 +274,17 @@ summary(lista.compra.usuarios)
 
 ## 16. Contar cuántos usuarios hay en la lista 'lista.compra.usuarios'.
 ```{r}
+#Si cada elemento de la lista 'lista.compra.usuarios' es un comprador/usuario, calculando la longitud de lista tenemos el numero de usuarios que hay en la lista. Este resultado coincide con el del paso 10.
 length(lista.compra.usuarios)
 
 ```
 
 
+# ------------------ Reglas de Asociación ------------------ #
+
 ## 17. Convertir a tipo de datos transacciones. Guardar en 'Tlista.compra.usuarios'.
 ```{r}
+#Mediante la funcion as(x, class), convertimos el objeto x a la clase que se indica en el segundo argumento, que en nuestro caso seria "transactions".
 TLista.compra.usuarios <- as(lista.compra.usuarios, "transactions")
 
 ```
@@ -285,6 +292,7 @@ TLista.compra.usuarios <- as(lista.compra.usuarios, "transactions")
 
 ## 18. Hacer inspect de los dos primeros valores de 'Tlista.compra.usuarios'.
 ```{r}
+#Mediante la funcion inspect() moostramos las transacciones en forma legible.
 inspect(TLista.compra.usuarios[1:2])
 
 ```
@@ -292,51 +300,65 @@ inspect(TLista.compra.usuarios[1:2])
 
 ## 19. Buscar ayuda de itemFrequencyPlot para visualizar las 10 transacciones más frecuentes.
 ```{r}
+#La funcion itemFrequencyPlot() tiene un argumento "topN" que nos permite indicar que solo visualize dicho numero de transacciones con la frecuencia mas alta.
 itemFrequencyPlot(TLista.compra.usuarios, topN=10, col = rainbow(10))
 
 ```
 
+
 ## 20. Generar las reglas de asociación con 80% de confianza y 15% de soporte (variar estos umbrales si no son adecuadas las reglas que obtienes - demasiadas y no acaba o pocas).
 ```{r}
+#Con los umbrales de confianza y de soporte a utilizar en el enunciado obtenemos ninguna regla. Variamos estos valores de forma que obtengamos un número razonable de reglas (como unas 50).
 reglas <- apriori(TLista.compra.usuarios, parameter = list(support=0.01, confidence=0.1)) 
 
 ```
 
 
-## 22. Ver las reglas generadas y ordenalas por lift. Guarda el resultado en una variable nueva.
+## 21. Ver las reglas generadas y ordenalas por lift. Guarda el resultado en una variable nueva.
 ```{r}
+#La funcion sort() nos permite ordenar las reglas mediante la medida de calidad que indiquemos, en nuestro caso lift.
 reglas_s <- sort(reglas, by= "lift")
 
-inspect(reglas_s)
+inspect(reglas)
 
 ```
 
 
-#  23. Elimina todas las reglas redundantes. Calcula el % de reglas redundantes que había.
+#  22. Elimina todas las reglas redundantes. Calcula el % de reglas redundantes que había.
 ```{r}
-reglas_s_redundantes <- reglas_s[is.redundant(reglas_s)]
+#La funcion is.redundant nos devuelve un vector logico indicando que reglas son redundantes. Guardo aquellas reglas redundantes en otra variable y las que no, en otra.
+ind <- is.redundant(reglas_s)
 
-reglas_s_noredundantes <- reglas_s[!is.redundant(reglas_s)]
+reglas_s_redundantes <- reglas_s[ind]
 
-( length(reglas_s_redundantes)/length(reglas_s) ) * 100
+reglas_s_noredundantes <- reglas_s[!ind]
+
+#Porcentaje de reglas redundantes que había:
+sprintf("%0.2f%%", length(reglas_s_redundantes)/length(reglas_s) * 100)
 
 ```
 
 
-## 24. Dibuja las reglas ordenadas y no redundantes usando paquete arulesViz. Si son muchas visualiza las 20 primeras.
+## 23. Dibuja las reglas ordenadas y no redundantes usando paquete arulesViz. Si son muchas visualiza las 20 primeras.
 ```{r}
-reglas_s_noredundantes %>%
-  head(n = 20) %>%
-  plot(method = "graph")
-
+#Visualizo las reglas mediante el metodo "agrupado".
 reglas_s_noredundantes %>%
   plot(method = "grouped")
 
+#Visualizo las reglas mediante el metodo "matriz".
 reglas_s_noredundantes %>%
   plot(method = "matrix")
 
+#Visualizo las reglas mediante el metodo "grafico de dispersion".
+reglas_s_noredundantes %>%
+  plot(method = "scatterplot")
+
+#Como elección nuestra, preferimos la visualizacion mediante el metodo "scatterplot", ya que nos permite ver el support y el lift de las reglas y observar como se distribuyen, y cuales son las mas interesantes (como, por ejemplo, las que tienen alto support y lift, que se encuentran más en la esquina superior izquierda).
+
 ```
 
+
+## 24. Apartado libre OwO 
 
 
 
