@@ -97,6 +97,15 @@ names(consumo_ds) <- c("Fecha","Hora","IDComprador","ProductoComprado")
 
 ## 6. Hacer un resumen (summary) del dataset y analizar toda la información detalladamente que devuelve el comando.
 ```{r}
+#El comando summary muestra la distribución de valores de Fecha e IDComprador y el tipo de hora
+#y el de ProductoComprado. El hecho de que solo se muestre la distribución de Fecha e IDComprador
+#Es porque los valores del dataset están ordenados por estas dos columnas mientras que
+#las otras dos no lo están. En cuanto a las distribuciones, muestra el valor que es el minimmo,
+#El valor que es el máximo y los valores que están en el primer cuartil, la mediana, la media 
+#y el tercer cuartil. En cuanto a hora e IDComprador, summary muestra la longitud de la columna
+#(numero de filas) y la clase de la columna junto con su tipo. En el caso de Hora
+# tiene las clases hms y difftime y es de tipo numeric y en el caso de ProductoComprado
+# la clase y el tipo son caracter.
 summary(consumo_ds)
 
 ```
@@ -106,17 +115,24 @@ summary(consumo_ds)
 ```{r}
 
 na.in.dataframe <-function(dataframe){
- ....
- 
-return(list(hay.nas,dataframe.sin.nas,posiciones)) 
+
+  hay.nas <- as.logical(sum(is.na(dataframe)))
+  
+  if(hay.nas){
+    posiciones <- sapply(dataframe,function(x){which(is.na(x))})
+
+    filas.con.nas <- dataframe[!complete.cases(dataframe),]
+  
+    dataframe.sin.nas <- dataframe[complete.cases(dataframe),]
+  }else{
+    dataframe.sin.nas <- dataframe
+    posiciones <- list(0)
+    filas.con.nas <- list(0)
+  }
+
+  
+return(list(Hay_Nas=hay.nas,DataFrame_sin_NAs=dataframe.sin.nas,Posiciones_con_NAs=posiciones, Filas_con_NAs=filas.con.nas)) 
 }
-
-unique(consumo_ds$Hora)
-
-consumo_ds %>% filter( ProductoComprado == "NONE"  )
-
-#ITEM NONE
-
 ```
 
 
