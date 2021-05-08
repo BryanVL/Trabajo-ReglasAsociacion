@@ -113,7 +113,11 @@ summary(consumo_ds)
 
 ## 7. Implementar una función que usando funciones vectoriales de R (apply, tapply, sapply,…) te devuelva si hay valores NA (mirar valores desconocidos como vienen en el dataset) en las columnas del dataset, si así lo fuera elminarlos del dataset pero guardarlos en un dataset_auxiliar.
 ```{r}
-
+#Esta funcion recibe un dataframe y devuelve si tiene NAs, el dataframe sin NAs,
+#las filas con NAs y las posiciones de las filas en el dataframe original.
+#En el caso de que no tenga NAs, devuelve FALSE en la primera variable, 
+#el dataframe original en la segunda y listas con el valor '0' en las
+#dos ultimas variables
 na.in.dataframe <-function(dataframe){
 
   hay.nas <- as.logical(sum(is.na(dataframe)))
@@ -283,6 +287,8 @@ lista.compra.usuarios[1:5]
 
 ## 15. Hacer summary de 'lista.compra.usuarios'.
 ```{r}
+#En este caso summary muestra la longitud (número de productos) de cada fila
+# y su tipo para cada uno, que en este caso, todos son de tipo caracter
 summary(lista.compra.usuarios)
 
 ```
@@ -335,7 +341,7 @@ reglas <- apriori(TLista.compra.usuarios, parameter = list(support=0.01, confide
 #La funcion sort() nos permite ordenar las reglas mediante la medida de calidad que indiquemos, en nuestro caso lift.
 reglas_s <- sort(reglas, by= "lift")
 
-inspect(reglas)
+inspect(reglas_s)
 
 ```
 
@@ -375,6 +381,12 @@ reglas_s_noredundantes %>%
 
 
 ## 24. Apartado libre OwO 
+```{r}
+
+#Conclusiones
+#
+```
+
 
 
 
