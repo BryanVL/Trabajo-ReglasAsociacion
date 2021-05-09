@@ -383,8 +383,61 @@ reglas_s_noredundantes %>%
 ## 24. Apartado libre OwO 
 ```{r}
 
-#Conclusiones
-#
+inspect(reglas_s_noredundantes)
+reglas_fin <- sort(reglas_s_noredundantes, by="lift")
+inspect(reglas_fin)
+
+#Esta funcion recibe transacciones y un objeto y devuelve un data.frame 
+#en el que entre los items de cada fila esta el objeto dado como parametro
+obtener.transacciones <- function(transaciones, objeto){
+  dataTransac <- as(transaciones, "data.frame")
+  
+  res <- dataTransac%>%
+  filter(grepl(objeto, items))
+  
+  return(res)
+}
+
+transaccionesD <- obtener.transacciones(TLista.compra.usuarios, "Tostada")
+
+#La regla obtenida con mayor confianza es la de Tostada => Cafe, que tan solo tiene
+#una confianza de 0,7. El resto de reglas obtenidas tienen menor confianza lo que hace
+#no sean del todo fiables y por lo tanto que no tenga sentido buscar anomalias 
+#ya que hay mucha probabilidad de que las reglas no se cumplan. Por poner un ejemplo, 
+#las transacciones con ID 2445, 2805, 2836, 2580, 3077, 3228, 3466 y 3655 no cumplen la regla.
+#A continuación se muestran dichas transacciones:
+
+transaccionesD %>%
+  filter(transactionID %in% c(2445, 2805, 2836, 2580, 3077, 3228, 3466, 3655))
+
+#Conclusiones:
+
+#Ahora se muestran los 20 items más frecuentes para sacar algunas conclusiones 
+#(se ha filtrado el item NONE que tiene una frecuencia de 753)
+frecuencia.items <- sort(itemFrequency(TLista.compra.usuarios, type="absolute"), decreasing = TRUE)[-c(5)]
+frecuencia.items[1:20]
+
+#Los items más vendidos son Café, Pan, Pastel, Te y Sandwich. 
+#Ahora nos fijamos en la regla 3
+
+inspect(reglas_fin[3])
+
+#Esta regla indica que cuando alguien compra café y Te suele comprar también Pastel.
+#Es por esto que para aumentar las ventas de pastel sería buena idea poner los tres
+#productos juntos e incluso poner alguna oferta que los involucre. Esta oferta
+#Podría consistir en un descuento de Pastel si compras Te. Esta oferta sería solo
+#con Te y el cafe habría que comprarlo por separado. Con esto se podrían aumentar
+#las ventas y para aumentar los beneficios subiría el precio del café, ya que por
+#las reglas obtenidas y la frecuencia con la que aparece el café parece ser un
+#producto muy demandado y que se compra casi siempre. También podrián venderse
+#packs de café lo que haría que los beneficios también se incrementen (esto es asi
+# porque el precio de transporte y manufacturación es el mismo pero el precio
+# al que vendes el producto aumenta, por lo tanto manufacturando y vendiendo
+# un pack de mayor cantidad obtienes margenes de beneficio más grandes). 
+#El problema de los packs es que si no se venden ocupan mucho espacio, 
+#lo cual cuesta dinero, pero viendo lo demandado que es en este caso el producto 
+#no supone un problema y se puede tener la seguridad de que se venderán.
+
 ```
 
 
